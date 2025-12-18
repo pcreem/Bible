@@ -59,13 +59,22 @@ function renderBook(bookName, chapterToJump) {
 
   contentEl.innerHTML = html;
 
-  contentEl.innerHTML = html;
-
   // Update book selector to match
   bookSel.value = bookName;
 
-  // Jump to chapter (instant scroll for new book render)
-  jumpToChapter(chapterToJump, false);
+  // 關鍵修正：延後執行跳章，確保 DOM 已完全更新
+  requestAnimationFrame(() => {
+    contentEl.scrollTop = 0;  // 先強制回到頂端，避免舊位置殘留
+
+    jumpToChapter(chapterToJump, false);  // 再跳到指定章節
+
+    // 額外保險：如果跳轉失敗，再強制一次頂端
+    setTimeout(() => {
+      if (chapterToJump == 1 && contentEl.scrollTop > 100) {
+        contentEl.scrollTop = 0;
+      }
+    }, 100);
+  });
 
   // Save session
   localStorage.setItem('bible_session', JSON.stringify({ book: bookName, chapter: chapterToJump }));
@@ -91,6 +100,10 @@ function nextBook() {
   if (currentIdx < books.length - 1) {
     const nextBookName = books[currentIdx + 1];
     renderBook(nextBookName, 1);
+
+    // 額外保險：切換後立即歸零（某些瀏覽器仍可能殘留舊 scroll）
+    contentEl.scrollTop = 0;
+
     return true;
   }
   return false;
@@ -149,8 +162,11 @@ function startAutoScroll() {
         setTimeout(() => {
           if (nextBook()) {
             last = performance.now();
-            currentPos = contentEl.scrollTop; // Sync to actual position set by renderBook
             lastFrameTime = 0; // Force immediate chapter update check
+            // 延遲同步 currentPos，確保 renderBook 的 requestAnimationFrame 已執行
+            requestAnimationFrame(() => {
+              currentPos = contentEl.scrollTop;
+            });
             nextBookPending = false;
           } else {
             stopAutoScroll();
