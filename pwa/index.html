@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>聖經隨身讀 - 沉浸式閱讀體驗</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div id="app">
+    <header>
+      <h1>聖經浸享</h1>
+      <div class="control-group">
+        <button id="themeToggle"
+          style="background:none; color:var(--text-muted); font-size:1.2rem; border:none; padding:0;">🌓</button>
+      </div>
+    </header>
+
+    <div id="controls">
+      <div class="control-group">
+        <select id="book"></select>
+        <div style="display:flex; align-items:center;">
+          <label for="chapter" style="margin-right:0.5rem">第</label>
+          <input id="chapter" type="number" min="1" value="1" style="width: 60px;">
+          <label for="chapter" style="margin-left:0.5rem">章</label>
+        </div>
+        <button id="load">載入內容</button>
+      </div>
+
+      <div class="control-group" style="border-left: 1px solid var(--border); padding-left: 1rem;">
+        <button id="start">▶ 開始滾動</button>
+        <button id="stop" disabled>■ 停止</button>
+      </div>
+
+      <div class="slider-container">
+        <label>滾動速度</label>
+        <input id="scrollSpeed" type="range" min="0.1" max="5" step="0.1" value="1">
+      </div>
+    </div>
+
+    <main id="content" class="fade-in">
+      <div style="text-align:center; color:var(--text-muted); margin-top:20vh;">
+        請選擇書卷與章節，開啟閱讀之旅
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => { });
+    }
+
+    // Simple Theme Toggle
+    const themeBtn = document.getElementById('themeToggle');
+    themeBtn.addEventListener('click', () => {
+      const current = document.body.getAttribute('data-theme');
+      document.body.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+    });
+  </script>
+</body>
+
+</html>
