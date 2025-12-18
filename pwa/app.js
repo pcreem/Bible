@@ -59,14 +59,19 @@ function renderBook(bookName, chapterToJump) {
 
   contentEl.innerHTML = html;
 
-  // Jump to chapter
-  jumpToChapter(chapterToJump);
+  contentEl.innerHTML = html;
+
+  // Update book selector to match
+  bookSel.value = bookName;
+
+  // Jump to chapter (instant scroll for new book render)
+  jumpToChapter(chapterToJump, false);
 
   // Save session
   localStorage.setItem('bible_session', JSON.stringify({ book: bookName, chapter: chapterToJump }));
 }
 
-function jumpToChapter(chapNum) {
+function jumpToChapter(chapNum, smooth = true) {
   const target = document.getElementById(`chap-${chapNum}`);
   if (target) {
     // We update currentChapter so the UI matches
@@ -75,7 +80,7 @@ function jumpToChapter(chapNum) {
     // Scroll the main content element
     contentEl.scrollTo({
       top: target.offsetTop - 20,
-      behavior: 'smooth'
+      behavior: smooth ? 'smooth' : 'auto'
     });
   }
 }
