@@ -100,14 +100,18 @@ function startAutoScroll() {
 
   function step(now) {
     if (!last) last = now;
-    const dt = now - last;
+    let dt = now - last;
     last = now;
+
+    // Prevent huge jumps if tab was inactive or glitches
+    if (dt > 100) dt = 16.67;
 
     const factor = parseFloat(scrollSpeed.value);
     scrollVelocity = 0.5 * factor;
 
     // Detect manual scroll and sync
-    if (Math.abs(contentEl.scrollTop - currentPos) > 5) {
+    // Increased threshold to 20 to avoid conflict with browser scrollTop rounding/lag on mobile
+    if (Math.abs(contentEl.scrollTop - currentPos) > 20) {
       currentPos = contentEl.scrollTop;
     }
 
