@@ -73,7 +73,10 @@ function jumpToChapter(chapNum) {
     currentChapter = parseInt(chapNum, 10);
     chapterInput.value = currentChapter;
     // Scroll the main content element
-    contentEl.scrollTop = target.offsetTop - 20;
+    contentEl.scrollTo({
+      top: target.offsetTop - 20,
+      behavior: 'smooth'
+    });
   }
 }
 
@@ -92,36 +95,52 @@ function startAutoScroll() {
   stopAutoScroll();
   let last = performance.now();
   let nextBookPending = false;
+  let currentPos = contentEl.scrollTop;
+  let lastFrameTime = 0;
 
   function step(now) {
+    if (!last) last = now;
     const dt = now - last;
     last = now;
 
     const factor = parseFloat(scrollSpeed.value);
     scrollVelocity = 0.5 * factor;
 
-    contentEl.scrollTop += scrollVelocity * (dt / 16);
+    // Detect manual scroll and sync
+    if (Math.abs(contentEl.scrollTop - currentPos) > 5) {
+      currentPos = contentEl.scrollTop;
+    }
 
-    // Auto-update chapter input based on visible title
-    const sections = contentEl.querySelectorAll('.chapter-section');
-    for (let sec of sections) {
-      if (sec.offsetTop <= contentEl.scrollTop + 100) {
-        const chap = sec.getAttribute('data-chap');
-        if (currentChapter != chap) {
-          currentChapter = chap;
-          chapterInput.value = chap;
-          localStorage.setItem('bible_session', JSON.stringify({ book: currentBook, chapter: chap }));
+    currentPos += scrollVelocity * (dt / 16.67);
+    contentEl.scrollTop = currentPos;
+
+    // Only update chapter info every ~200ms or when significant scroll happened to save CPU
+    if (now - lastFrameTime > 200) {
+      lastFrameTime = now;
+      const sections = contentEl.querySelectorAll('.chapter-section');
+      // Find the current chapter (check from bottom up to find the last one that passed the threshold)
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const sec = sections[i];
+        if (sec.offsetTop <= contentEl.scrollTop + 120) {
+          const chap = sec.getAttribute('data-chap');
+          if (currentChapter != chap) {
+            currentChapter = chap;
+            chapterInput.value = chap;
+            localStorage.setItem('bible_session', JSON.stringify({ book: currentBook, chapter: chap }));
+          }
+          break; // Found the current chapter
         }
       }
     }
 
     // Check bottom for next book
-    if (contentEl.scrollTop + contentEl.clientHeight >= contentEl.scrollHeight - 2) {
+    if (contentEl.scrollTop + contentEl.clientHeight >= contentEl.scrollHeight - 5) {
       if (!nextBookPending) {
         nextBookPending = true;
         setTimeout(() => {
           if (nextBook()) {
             last = performance.now();
+            currentPos = 0; // Reset position for next book
             nextBookPending = false;
           } else {
             stopAutoScroll();
