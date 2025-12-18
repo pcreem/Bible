@@ -149,7 +149,8 @@ function startAutoScroll() {
         setTimeout(() => {
           if (nextBook()) {
             last = performance.now();
-            currentPos = 0; // Reset position for next book
+            currentPos = contentEl.scrollTop; // Sync to actual position set by renderBook
+            lastFrameTime = 0; // Force immediate chapter update check
             nextBookPending = false;
           } else {
             stopAutoScroll();
